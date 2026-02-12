@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Vegytiszta UI5 Teszt</title>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://openui5.hana.ondemand.com/1.105.1/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m"
+        data-sap-ui-async="true"
+        data-sap-ui-resourceroots='{
+            "ui5.doubleclick.poc": "./"
+        }'>
+    </script>
+</head>
+<body class="sapUiBody" id="content">
+    <script>
+        window["sap-ui-config"] = {
+            "xx-waitForTheme": "init"
+        };
+    </script>
+    <script>
+        window.addEventListener("load", function() {
+            setTimeout(function() {
+                if (typeof sap !== "undefined") {
+                    sap.ui.getCore().attachInit(function() {
+            sap.ui.require([
+                "sap/m/Page",
+                "sap/m/VBox",
+                "sap/m/Text",
+                "ui5/doubleclick/poc/control/PureDoubleClickInput"
+            ], function(Page, VBox, Text, PureDoubleClickInput) {
+
+                var oInput = new PureDoubleClickInput({
+                    value: "Kattints kétszer!",
+                    width: "400px",
+                    placeholder: "Védett mező"
+                });
+
+                var oPage = new Page({
+                    title: "Vegytiszta UI5 Teszt",
+                    content: [
+                        new VBox({
+                            class: "sapUiMediumMargin",
+                            items: [
+                                new Text({
+                                    text: "Dupla kattintásos input (vegytiszta UI5):",
+                                    class: "sapUiSmallMarginBottom"
+                                }),
+                                oInput
+                            ]
+                        })
+                    ]
+                });
+
+                oPage.placeAt("content");
+                    });
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

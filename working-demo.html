@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>UI5 Double-Click Demo - Működik!</title>
+    <style>
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #splash-screen.loaded {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .splash-content {
+            text-align: center;
+            color: white;
+        }
+
+        .splash-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .splash-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .splash-info {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://openui5.hana.ondemand.com/1.105.1/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m"
+        data-sap-ui-async="true"
+        data-sap-ui-preload="async">
+    </script>
+</head>
+<body class="sapUiBody">
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <div class="splash-title">🎯 UI5 Double-Click POC</div>
+            <div class="splash-subtitle">Dupla-kattintásos védett input mezők</div>
+            <div class="loader"></div>
+            <div class="splash-info">UI5 betöltése...</div>
+        </div>
+    </div>
+
+    <!-- UI5 App Container -->
+    <div id="content"></div>
+
+    <script>
+        // Várunk, amíg a UI5 betöltődik
+        (function waitForSap() {
+            if (typeof sap !== 'undefined' && sap.ui && sap.ui.getCore) {
+                // UI5 inicializálás UTÁN futtatjuk a kódot
+                sap.ui.getCore().attachInit(function() {
+            console.log("UI5 Core initialized!");
+
+            // Várunk, hogy minden betöltődjön
+            sap.ui.require([
+                "sap/m/Page",
+                "sap/m/Table",
+                "sap/m/Column",
+                "sap/m/ColumnListItem",
+                "sap/m/Input",
+                "sap/m/Text",
+                "sap/m/Title",
+                "sap/m/VBox",
+                "sap/m/MessageToast",
+                "sap/ui/model/json/JSONModel"
+            ], function(Page, Table, Column, ColumnListItem, Input, Text, Title, VBox, MessageToast, JSONModel) {
+
+                console.log("All UI5 modules loaded!");
+
+                // ========================================
+                // DUPLA KATTINTÁS KEZELŐ LOGIKA
+                // ========================================
+                var clickTracking = {};
+                var clickTimeout = 500;
+
+                function handleInputPress(oEvent) {
+                    var oInput = oEvent.getSource();
+                    var sInputId = oInput.getId();
+
+                    if (!clickTracking[sInputId]) {
+                        clickTracking[sInputId] = { count: 0, timeout: null };
+                    }
+
+                    var oTracking = clickTracking[sInputId];
+                    if (oTracking.timeout) {
+                        clearTimeout(oTracking.timeout);
+                    }
+
+                    oTracking.count++;
+
+                    if (oTracking.count === 1) {
+                        // ELSŐ KATTINTÁS
+                        MessageToast.show("✋ Első kattintás - kattints még egyszer a szerkesztéshez!");
+                        oInput.addStyleClass("sapUiHighlight");
+
+                        oTracking.timeout = setTimeout(function() {
+                            oTracking.count = 0;
+                            oInput.removeStyleClass("sapUiHighlight");
+                        }, clickTimeout);
+
+                    } else if (oTracking.count === 2) {
+                        // MÁSODIK KATTINTÁS - SZERKESZTHETŐ!
+                        MessageToast.show("✅ Szerkeszthető mód aktiválva!");
+                        oInput.setEditable(true);
+                        oInput.removeStyleClass("sapUiHighlight");
+                        oInput.addStyleClass("sapUiEdit");
+
+                        setTimeout(function() {
+                            oInput.focus();
+                            var oDomRef = oInput.getDomRef("inner");
+                            if (oDomRef && oDomRef.select) {
+                                oDomRef.select();
+                            }
+                        }, 50);
+
+                        oTracking.count = 0;
+                        clearTimeout(oTracking.timeout);
+
+                        // Blur eseményre visszaállítás read-only módba
+                        oInput.attachBrowserEvent("blur", function() {
+                            oInput.setEditable(false);
+                            oInput.removeStyleClass("sapUiEdit");
+                            oInput.detachBrowserEvent("blur");
+                            MessageToast.show("🔒 Mező újra védve");
+                        });
+                    }
+                }
+
+                // ========================================
+                // ADAT MODELL
+                // ========================================
+                var oModel = new JSONModel({
+                    items: [
+                        { name: "Első elem", value: "100", description: "Dupla kattintással szerkeszthető" },
+                        { name: "Második elem", value: "200", description: "Védett adat mező" },
+                        { name: "Harmadik elem", value: "300", description: "Próbáld ki a dupla kattintást!" },
+                        { name: "Negyedik elem", value: "400", description: "500ms timeout van beállítva" }
+                    ]
+                });
+
+                // ========================================
+                // TÁBLÁZAT LÉTREHOZÁSA
+                // ========================================
+                var oTable = new Table({
+                    headerText: "🔐 Védett adatok - Kattints kétszer az Érték mezőre a szerkesztéshez!",
+                    columns: [
+                        new Column({
+                            header: new Text({ text: "Név" }),
+                            width: "25%"
+                        }),
+                        new Column({
+                            header: new Text({ text: "⚡ Érték (KATTINTS 2x!)" }),
+                            width: "25%"
+                        }),
+                        new Column({
+                            header: new Text({ text: "Leírás" }),
+                            width: "50%"
+                        })
+                    ]
+                });
+
+                oTable.bindItems({
+                    path: "/items",
+                    template: new ColumnListItem({
+                        cells: [
+                            new Text({ text: "{name}" }),
+                            new Input({
+                                value: "{value}",
+                                editable: false,
+                                width: "100%",
+                                press: handleInputPress
+                            }),
+                            new Text({ text: "{description}" })
+                        ]
+                    })
+                });
+
+                // ========================================
+                // OLDAL LÉTREHOZÁSA
+                // ========================================
+                var oPage = new Page({
+                    title: "🎯 UI5 Dupla-Kattintásos Input Demo",
+                    showHeader: true,
+                    content: [
+                        new VBox({
+                            class: "sapUiMediumMargin",
+                            items: [
+                                new Title({
+                                    text: "📋 Használati útmutató:",
+                                    level: "H3"
+                                }),
+                                new Text({
+                                    text: "1️⃣ Kattints EGYSZER egy érték mezőre → Highlight jelenik meg + Toast üzenet\n" +
+                                          "2️⃣ Kattints MÉG EGYSZER (500ms-en belül) → Mező szerkeszthetővé válik + automatikus fókusz\n" +
+                                          "3️⃣ Kattints ki a mezőből (blur) → Automatikusan visszavált read-only módba",
+                                    renderWhitespace: true,
+                                    class: "sapUiSmallMarginBottom"
+                                }),
+                                new Title({
+                                    text: "💡 Tipp:",
+                                    level: "H4",
+                                    class: "sapUiSmallMarginTop"
+                                }),
+                                new Text({
+                                    text: "Ha lassan kattintasz (több mint 500ms), akkor újrakezdi a számlálást!",
+                                    class: "sapUiSmallMarginBottom"
+                                }),
+                                oTable
+                            ]
+                        })
+                    ]
+                });
+
+                oPage.setModel(oModel);
+
+                // Oldal megjelenítése
+                oPage.placeAt("content");
+
+                // ========================================
+                // SPLASH SCREEN ELTÜNTETÉSE
+                // ========================================
+                setTimeout(function() {
+                    console.log("UI ready, hiding splash screen...");
+                    document.getElementById("splash-screen").classList.add("loaded");
+
+                    // Splash screen eltávolítása 500ms múlva (az animáció után)
+                    setTimeout(function() {
+                        var splash = document.getElementById("splash-screen");
+                        if (splash) {
+                            splash.remove();
+                        }
+                    }, 500);
+
+                    // Üdvözlő üzenet
+                    MessageToast.show("🎉 Demo betöltve! Próbáld ki a dupla kattintást az érték mezőkön!");
+                }, 300);
+                });
+            });
+            } else {
+                // Újra próbálkozunk 50ms múlva
+                setTimeout(waitForSap, 50);
+            }
+        })();
+    </script>
+</body>
+</html>

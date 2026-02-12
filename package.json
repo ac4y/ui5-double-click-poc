@@ -1,0 +1,11 @@
+{
+  "name": "ui5-double-click-poc",
+  "version": "1.0.0",
+  "description": "UI5 POC for double-click editable input",
+  "scripts": {
+    "start": "ui5 serve -o index.html"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^2.14.0"
+  }
+}

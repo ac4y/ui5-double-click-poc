@@ -1,0 +1,59 @@
+<mvc:View
+    controllerName="ui5.doubleclick.poc.controller.Main"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    <Page title="UI5 Dupla-Kattintásos Input POC">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <Title text="Dupla-kattintásos szerkeszthető mezők" class="sapUiSmallMarginBottom"/>
+                <Text text="Az input mezők első kattintásra kijelölődnek, második kattintásra válnak szerkeszthetővé." class="sapUiSmallMarginBottom"/>
+
+                <Table
+                    id="itemsTable"
+                    items="{/items}"
+                    mode="SingleSelectMaster"
+                    class="sapUiSmallMarginTop">
+                    <columns>
+                        <Column width="30%">
+                            <Text text="Név"/>
+                        </Column>
+                        <Column width="30%">
+                            <Text text="Érték"/>
+                        </Column>
+                        <Column width="40%">
+                            <Text text="Leírás"/>
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{name}"/>
+                                <Input
+                                    value="{value}"
+                                    editable="false"
+                                    customData:rowIndex="{path: '', formatter: '.getRowIndex'}"
+                                    press=".onInputPress"
+                                    xmlns:customData="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+                                <Text text="{description}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+
+                <VBox class="sapUiLargeMarginTop">
+                    <Title text="Egyedi DoubleClickInput control" level="H3" class="sapUiSmallMarginBottom"/>
+                    <Text text="Saját custom control megoldás:" class="sapUiSmallMarginBottom"/>
+
+                    <HBox alignItems="Center" class="sapUiSmallMarginTop">
+                        <Label text="Egyedi mező 1:" labelFor="customInput1" class="sapUiTinyMarginEnd"/>
+                        <core:Fragment fragmentName="ui5.doubleclick.poc.control.DoubleClickInput" type="XML">
+                            <core:ExtensionPoint name="ext1"/>
+                        </core:Fragment>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

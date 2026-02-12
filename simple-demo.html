@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>UI5 Double-Click Demo - Working</title>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://sdk.openui5.org/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m"
+        data-sap-ui-async="true"
+        data-sap-ui-version="1.105.1">
+    </script>
+</head>
+<body class="sapUiBody" id="content">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            (function waitForSap() {
+                if (typeof sap !== 'undefined' && sap.ui && sap.ui.getCore) {
+                    sap.ui.getCore().attachInit(function() {
+            sap.ui.require([
+                "sap/m/Page",
+                "sap/m/Table",
+                "sap/m/Column",
+                "sap/m/ColumnListItem",
+                "sap/m/Input",
+                "sap/m/Text",
+                "sap/m/Title",
+                "sap/m/VBox",
+                "sap/m/MessageToast",
+                "sap/ui/model/json/JSONModel"
+            ], function(Page, Table, Column, ColumnListItem, Input, Text, Title, VBox, MessageToast, JSONModel) {
+
+                // Dupla kattintás kezelő
+                var clickTracking = {};
+                var clickTimeout = 500;
+
+                function handleInputPress(oEvent) {
+                    var oInput = oEvent.getSource();
+                    var sInputId = oInput.getId();
+
+                    if (!clickTracking[sInputId]) {
+                        clickTracking[sInputId] = { count: 0, timeout: null };
+                    }
+
+                    var oTracking = clickTracking[sInputId];
+                    if (oTracking.timeout) {
+                        clearTimeout(oTracking.timeout);
+                    }
+
+                    oTracking.count++;
+
+                    if (oTracking.count === 1) {
+                        MessageToast.show("Első kattintás - kattints még egyszer!");
+                        oInput.addStyleClass("sapUiHighlight");
+
+                        oTracking.timeout = setTimeout(function() {
+                            oTracking.count = 0;
+                            oInput.removeStyleClass("sapUiHighlight");
+                        }, clickTimeout);
+
+                    } else if (oTracking.count === 2) {
+                        MessageToast.show("Második kattintás - most szerkeszthető!");
+                        oInput.setEditable(true);
+                        oInput.removeStyleClass("sapUiHighlight");
+
+                        setTimeout(function() {
+                            oInput.focus();
+                            var oDomRef = oInput.getDomRef("inner");
+                            if (oDomRef && oDomRef.select) {
+                                oDomRef.select();
+                            }
+                        }, 50);
+
+                        oTracking.count = 0;
+                        clearTimeout(oTracking.timeout);
+
+                        oInput.attachBrowserEvent("blur", function() {
+                            oInput.setEditable(false);
+                            oInput.detachBrowserEvent("blur");
+                        });
+                    }
+                }
+
+                // Adat modell
+                var oModel = new JSONModel({
+                    items: [
+                        { name: "Első elem", value: "100", description: "Dupla kattintással szerkeszthető" },
+                        { name: "Második elem", value: "200", description: "Védett mező" },
+                        { name: "Harmadik elem", value: "300", description: "Próbáld ki!" }
+                    ]
+                });
+
+                // Táblázat
+                var oTable = new Table({
+                    headerText: "Védett adatok - Kattints kétszer az érték mezőre!",
+                    columns: [
+                        new Column({ header: new Text({ text: "Név" }), width: "30%" }),
+                        new Column({ header: new Text({ text: "Érték (KATTINTS 2x!)" }), width: "30%" }),
+                        new Column({ header: new Text({ text: "Leírás" }), width: "40%" })
+                    ]
+                });
+
+                oTable.bindItems({
+                    path: "/items",
+                    template: new ColumnListItem({
+                        cells: [
+                            new Text({ text: "{name}" }),
+                            new Input({
+                                value: "{value}",
+                                editable: false,
+                                press: handleInputPress
+                            }),
+                            new Text({ text: "{description}" })
+                        ]
+                    })
+                });
+
+                // Oldal
+                var oPage = new Page({
+                    title: "🎯 UI5 Dupla-Kattintásos Input Demo",
+                    showHeader: true,
+                    content: [
+                        new VBox({
+                            class: "sapUiMediumMargin",
+                            items: [
+                                new Title({
+                                    text: "Használat:",
+                                    level: "H3"
+                                }),
+                                new Text({
+                                    text: "1. Kattints egyszer egy érték mezőre → Highlight + Toast\n" +
+                                          "2. Kattints még egyszer (500ms-en belül) → Szerkeszthető!\n" +
+                                          "3. Kattints ki → Visszavált read-only módba",
+                                    renderWhitespace: true,
+                                    class: "sapUiSmallMarginBottom"
+                                }),
+                                oTable
+                            ]
+                        })
+                    ]
+                });
+
+                oPage.setModel(oModel);
+                oPage.placeAt("content");
+                    });
+                });
+                } else {
+                    setTimeout(waitForSap, 50);
+                }
+            })();
+        });
+    </script>
+</body>
+</html>

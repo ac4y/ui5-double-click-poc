@@ -1,0 +1,11 @@
+specVersion: "2.6"
+metadata:
+  name: ui5.doubleclick.poc
+type: application
+framework:
+  name: OpenUI5
+  version: "1.105.0"
+  libraries:
+    - name: sap.m
+    - name: sap.ui.core
+    - name: sap.ui.layout

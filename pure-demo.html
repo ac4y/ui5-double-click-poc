@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Vegytiszta UI5 Double-Click POC</title>
+    <script>
+        window.initPureDemo = function() {
+            sap.ui.require([
+                "sap/m/App",
+                "sap/m/Page",
+                "sap/m/Table",
+                "sap/m/Column",
+                "sap/m/ColumnListItem",
+                "sap/m/Text",
+                "sap/m/Title",
+                "sap/m/VBox",
+                "sap/m/HBox",
+                "sap/m/Label",
+                "sap/m/MessageToast",
+                "sap/ui/model/json/JSONModel",
+                "ui5/doubleclick/poc/control/PureDoubleClickInput"
+            ], function(App, Page, Table, Column, ColumnListItem, Text, Title, VBox, HBox, Label, MessageToast, JSONModel, PureDoubleClickInput) {
+
+                // Adat modell
+                var oModel = new JSONModel({
+                    items: [
+                        { name: "Első elem", value: "100", description: "Vegytiszta UI5 megoldás" },
+                        { name: "Második elem", value: "200", description: "UI5 Delegate + Core.delayedCall" },
+                        { name: "Harmadik elem", value: "300", description: "Nincs natív setTimeout!" }
+                    ],
+                    standalone1: "Önálló mező 1",
+                    standalone2: "Önálló mező 2"
+                });
+
+                // Táblázat létrehozása
+                var oTable = new Table({
+                    headerText: "Védett adatok táblázatban",
+                    columns: [
+                        new Column({ header: new Text({ text: "Név" }), width: "30%" }),
+                        new Column({ header: new Text({ text: "Érték (2x kattintás!)" }), width: "30%" }),
+                        new Column({ header: new Text({ text: "Leírás" }), width: "40%" })
+                    ]
+                });
+
+                oTable.bindItems({
+                    path: "/items",
+                    template: new ColumnListItem({
+                        cells: [
+                            new Text({ text: "{name}" }),
+                            new PureDoubleClickInput({
+                                value: "{value}",
+                                width: "100%",
+                                clickTimeout: 500,
+                                doubleClick: function(oEvent) {
+                                    console.log("Táblázat input: dupla kattintás", oEvent.getSource().getValue());
+                                }
+                            }),
+                            new Text({ text: "{description}" })
+                        ]
+                    })
+                });
+
+                // Önálló input mezők
+                var oInput1 = new PureDoubleClickInput("standalone1", {
+                    value: "{/standalone1}",
+                    width: "300px",
+                    placeholder: "Dupla kattintás a szerkesztéshez",
+                    clickTimeout: 600,
+                    firstClickMessage: "Első kattintás - még egy!",
+                    secondClickMessage: "Most szerkesztheted!",
+                    firstClick: function() {
+                        console.log("Első kattintás event!");
+                    },
+                    doubleClick: function() {
+                        console.log("Dupla kattintás event!");
+                    }
+                });
+
+                var oInput2 = new PureDoubleClickInput("standalone2", {
+                    value: "{/standalone2}",
+                    width: "300px",
+                    placeholder: "Ez is védett",
+                    clickTimeout: 500
+                });
+
+                // Oldal létrehozása
+                var oPage = new Page({
+                    title: "Vegytiszta UI5 Dupla-Kattintásos Input POC",
+                    content: [
+                        new VBox({
+                            class: "sapUiMediumMargin",
+                            items: [
+                                new Title({
+                                    text: "🧪 Vegytiszta UI5 Megoldás",
+                                    level: "H2",
+                                    class: "sapUiSmallMarginBottom"
+                                }),
+                                new Text({
+                                    text: "Ez a verzió CSAK UI5 API-kat használ - nincs natív setTimeout, addEventListener, stb.",
+                                    class: "sapUiSmallMarginBottom"
+                                }),
+
+                                new Title({
+                                    text: "Táblázatban",
+                                    level: "H3",
+                                    class: "sapUiMediumMarginTop"
+                                }),
+                                oTable,
+
+                                new Title({
+                                    text: "Önálló Mezők",
+                                    level: "H3",
+                                    class: "sapUiMediumMarginTop"
+                                }),
+
+                                new HBox({
+                                    alignItems: "Center",
+                                    class: "sapUiSmallMarginTop",
+                                    items: [
+                                        new Label({ text: "Védett mező 1:", labelFor: "standalone1", class: "sapUiTinyMarginEnd" }),
+                                        oInput1
+                                    ]
+                                }),
+
+                                new HBox({
+                                    alignItems: "Center",
+                                    class: "sapUiSmallMarginTop",
+                                    items: [
+                                        new Label({ text: "Védett mező 2:", labelFor: "standalone2", class: "sapUiTinyMarginEnd" }),
+                                        oInput2
+                                    ]
+                                }),
+
+                                new Title({
+                                    text: "ℹ️ Használat",
+                                    level: "H3",
+                                    class: "sapUiMediumMarginTop"
+                                }),
+                                new Text({
+                                    text: "1. Kattints egyszer egy védett mezőre → Highlight + Toast üzenet\n" +
+                                          "2. Kattints még egyszer (500-600ms-en belül) → Szerkeszthető + Fókusz\n" +
+                                          "3. Kattints ki a mezőből → Visszavált read-only módba",
+                                    renderWhitespace: true
+                                })
+                            ]
+                        })
+                    ]
+                });
+
+                oPage.setModel(oModel);
+
+                // App létrehozása és megjelenítés
+                var oApp = new App({
+                    pages: [oPage]
+                });
+
+                oApp.placeAt("content");
+            });
+        };
+    </script>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://openui5.hana.ondemand.com/1.105.1/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m"
+        data-sap-ui-async="true"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-resourceroots='{
+            "ui5.doubleclick.poc": "./"
+        }'
+        data-sap-ui-onInit="initPureDemo">
+    </script>
+</head>
+<body class="sapUiBody" id="content">
+</body>
+</html>
