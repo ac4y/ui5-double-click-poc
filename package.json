@@ -7,5 +7,14 @@
   },
   "devDependencies": {
     "@ui5/cli": "^2.14.0"
+  },
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openui5/sap.m": "^1.105.0",
+    "@openui5/sap.ui.core": "^1.105.0",
+    "@openui5/themelib_sap_horizon": "^1.105.0"
   }
 }

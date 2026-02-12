@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>UI5 Double-Click Demo</title>
+    <script>
+        window.onAppInit = function() {
+            sap.ui.require([
+                "sap/m/App",
+                "sap/m/Page",
+                "sap/m/Input",
+                "sap/m/Text",
+                "sap/m/VBox",
+                "sap/m/MessageToast"
+            ], function(App, Page, Input, Text, VBox, MessageToast) {
+
+                var clickCount = 0;
+                var clickTimeout = null;
+
+                function handleInputPress(oEvent) {
+                    var oInput = oEvent.getSource();
+
+                    if (clickTimeout) {
+                        clearTimeout(clickTimeout);
+                    }
+
+                    clickCount++;
+
+                    if (clickCount === 1) {
+                        MessageToast.show("Első kattintás - kattints még egyszer!");
+
+                        clickTimeout = setTimeout(function() {
+                            clickCount = 0;
+                        }, 500);
+
+                    } else if (clickCount === 2) {
+                        MessageToast.show("Szerkeszthető!");
+                        oInput.setEditable(true);
+                        clickCount = 0;
+                        clearTimeout(clickTimeout);
+
+                        setTimeout(function() {
+                            oInput.focus();
+                            if (oInput.getDomRef("inner")) {
+                                oInput.getDomRef("inner").select();
+                            }
+                        }, 50);
+
+                        oInput.attachBrowserEvent("blur", function() {
+                            oInput.setEditable(false);
+                        });
+                    }
+                }
+
+                var oInput = new Input({
+                    value: "Kattints duplán a szerkesztéshez!",
+                    editable: false,
+                    width: "400px",
+                    press: handleInputPress
+                });
+
+                var oPage = new Page({
+                    title: "UI5 Double-Click Demo",
+                    content: [
+                        new VBox({
+                            alignItems: "Center",
+                            justifyContent: "Center",
+                            items: [
+                                new Text({
+                                    text: "Dupla-kattintás a mező szerkesztéséhez"
+                                }).addStyleClass("sapUiSmallMarginBottom"),
+                                oInput
+                            ]
+                        }).addStyleClass("sapUiLargeMarginTop")
+                    ]
+                });
+
+                var oApp = new App({
+                    pages: [oPage]
+                });
+
+                oApp.placeAt("content");
+            });
+        };
+    </script>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://sapui5.hana.ondemand.com/1.105.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m"
+        data-sap-ui-async="true"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-onInit="onAppInit">
+    </script>
+</head>
+<body class="sapUiBody" id="content">
+</body>
+</html>

@@ -2,19 +2,226 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UI5 Double-Click POC</title>
+    <title>UI5 Barcode Confirmation Demo</title>
+    <script>
+        window.onAppInit = function() {
+            sap.ui.require([
+                "sap/m/App",
+                "sap/m/Page",
+                "sap/m/Input",
+                "sap/m/Text",
+                "sap/m/VBox",
+                "sap/m/HBox",
+                "sap/m/Button",
+                "sap/m/MessageToast"
+            ], function(App, Page, Input, Text, VBox, HBox, Button, MessageToast) {
+
+                // Állapotok
+                var STATE = {
+                    IDLE: "IDLE",
+                    PENDING: "PENDING",
+                    CONFIRMED: "CONFIRMED",
+                    ERROR: "ERROR"
+                };
+
+                var currentState = STATE.IDLE;
+                var lastScannedBarcode = null;
+
+                // Input mező a vonalkód beolvasáshoz
+                var oBarcodeInput = new Input({
+                    placeholder: "Olvasd be a vonalkódot...",
+                    width: "400px",
+                    liveChange: function(oEvent) {
+                        // Automatikus ENTER szimuláció ha van vonalkód
+                        var value = oEvent.getParameter("value");
+                        if (value && value.length > 0) {
+                            // Vonalkód olvasó automatikusan ENTER-t üt
+                        }
+                    }
+                });
+
+                // ENTER billentyű figyelése - vonalkód beolvasás szimulációja
+                oBarcodeInput.attachBrowserEvent("keypress", function(e) {
+                    if (e.key === "Enter" || e.keyCode === 13) {
+                        var barcode = oBarcodeInput.getValue().trim();
+                        if (barcode) {
+                            handleBarcodeScanned(barcode);
+                        }
+                    }
+                });
+
+                // Vonalkód beolvasás kezelése
+                function handleBarcodeScanned(barcode) {
+                    var domRef = oBarcodeInput.getDomRef();
+
+                    if (currentState === STATE.IDLE) {
+                        // ELSŐ BEOLVASÁS - Megerősítésre vár
+                        currentState = STATE.PENDING;
+                        lastScannedBarcode = barcode;
+
+                        MessageToast.show("Először beolvasva - olvasd be újra a megerősítéshez!");
+
+                        // SÁRGA háttér
+                        domRef.style.backgroundColor = "#fff3cd";
+                        domRef.style.border = "2px solid #ffc107";
+
+                        // NEM töröljük az input mezőt, marad benne
+
+                    } else if (currentState === STATE.PENDING) {
+                        // MÁSODIK BEOLVASÁS - Ellenőrzés
+                        if (barcode === lastScannedBarcode) {
+                            // HELYES - Megerősítve!
+                            currentState = STATE.CONFIRMED;
+
+                            MessageToast.show("Megerősítve! Művelet végrehajtva.");
+
+                            // ZÖLD háttér
+                            domRef.style.backgroundColor = "#d4edda";
+                            domRef.style.border = "2px solid #28a745";
+
+                            // Reset után 2 másodperc
+                            setTimeout(function() {
+                                resetState();
+                            }, 2000);
+
+                        } else {
+                            // ROSSZ vonalkód!
+                            currentState = STATE.ERROR;
+
+                            MessageToast.show("Hiba! Rossz vonalkód. Olvasd be újra ugyanazt: " + lastScannedBarcode);
+
+                            // PIROS háttér
+                            domRef.style.backgroundColor = "#f8d7da";
+                            domRef.style.border = "2px solid #dc3545";
+
+                            // Vissza PENDING állapotba
+                            setTimeout(function() {
+                                currentState = STATE.PENDING;
+                                // SÁRGA háttér újra
+                                domRef.style.backgroundColor = "#fff3cd";
+                                domRef.style.border = "2px solid #ffc107";
+                            }, 1500);
+                        }
+                    }
+                }
+
+                // Állapot visszaállítás
+                function resetState() {
+                    currentState = STATE.IDLE;
+                    lastScannedBarcode = null;
+                    oBarcodeInput.setValue("");
+
+                    var domRef = oBarcodeInput.getDomRef();
+                    if (domRef) {
+                        domRef.style.backgroundColor = "";
+                        domRef.style.border = "";
+                    }
+                }
+
+                // ESC billentyű - Megszakítás
+                oBarcodeInput.attachBrowserEvent("keydown", function(e) {
+                    if (e.key === "Escape" || e.keyCode === 27) {
+                        if (currentState !== STATE.IDLE) {
+                            MessageToast.show("Megerősítés megszakítva.");
+                            resetState();
+                        }
+                    }
+                });
+
+                // Teszt gombok (demo célra)
+                var oTestButton1 = new Button({
+                    text: "Teszt: 123456",
+                    press: function() {
+                        oBarcodeInput.setValue("123456");
+                        handleBarcodeScanned("123456");
+                    }
+                });
+
+                var oTestButton2 = new Button({
+                    text: "Teszt: 789012",
+                    press: function() {
+                        oBarcodeInput.setValue("789012");
+                        handleBarcodeScanned("789012");
+                    }
+                });
+
+                var oResetButton = new Button({
+                    text: "Reset",
+                    type: "Emphasized",
+                    press: function() {
+                        resetState();
+                        MessageToast.show("Állapot visszaállítva.");
+                    }
+                });
+
+                // Állapot megjelenítő
+                var oStateText = new Text({
+                    text: "Állapot: IDLE"
+                });
+
+                // Állapot frissítése minden beolvasás után
+                setInterval(function() {
+                    var stateMsg = "Állapot: " + currentState;
+                    if (lastScannedBarcode) {
+                        stateMsg += " | Utolsó vonalkód: " + lastScannedBarcode;
+                    }
+                    oStateText.setText(stateMsg);
+                }, 100);
+
+                var oPage = new Page({
+                    title: "Vonalkód Megerősítés Demo",
+                    content: [
+                        new VBox({
+                            alignItems: "Center",
+                            justifyContent: "Center",
+                            items: [
+                                new Text({
+                                    text: "Vonalkód Kétlépcsős Megerősítés",
+                                    class: "sapUiMediumMarginBottom"
+                                }).addStyleClass("sapUiLargeMarginTop"),
+
+                                new Text({
+                                    text: "1) Olvasd be a vonalkódot (vagy írd be és nyomj ENTER-t)",
+                                    class: "sapUiTinyMarginBottom"
+                                }),
+                                new Text({
+                                    text: "2) Olvasd be ÚJRA ugyanazt a vonalkódot a megerősítéshez",
+                                    class: "sapUiSmallMarginBottom"
+                                }),
+
+                                oBarcodeInput,
+
+                                new HBox({
+                                    class: "sapUiSmallMarginTop",
+                                    items: [
+                                        oTestButton1,
+                                        oTestButton2,
+                                        oResetButton
+                                    ]
+                                }).addStyleClass("sapUiTinyMarginTop"),
+
+                                oStateText.addStyleClass("sapUiSmallMarginTop")
+                            ]
+                        }).addStyleClass("sapUiMediumMargin")
+                    ]
+                });
+
+                var oApp = new App({
+                    pages: [oPage]
+                });
+
+                oApp.placeAt("content");
+            });
+        };
+    </script>
     <script
         id="sap-ui-bootstrap"
-        src="https://sapui5.hana.ondemand.com/1.105.0/resources/sap-ui-core.js"
+        src="resources/sap-ui-core.js"
         data-sap-ui-theme="sap_horizon"
         data-sap-ui-libs="sap.m"
-        data-sap-ui-resourceroots='{
-            "ui5.doubleclick.poc": "./"
-        }'
-        data-sap-ui-oninit="module:ui5/doubleclick/poc/index"
+        data-sap-ui-async="true"
         data-sap-ui-compatVersion="edge"
-        data-sap-ui-async="true">
+        data-sap-ui-onInit="onAppInit">
     </script>
 </head>
 <body class="sapUiBody" id="content">
