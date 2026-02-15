@@ -4,7 +4,7 @@
     "id": "ui5.doubleclick.poc",
     "type": "application",
     "title": "Double-Click POC",
-    "description": "UI5 POC for double-click editable input",
+    "description": "SAPUI5 POC for double-click editable input - hybrid runner",
     "applicationVersion": {
       "version": "1.0.0"
     }

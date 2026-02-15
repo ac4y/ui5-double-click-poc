@@ -1,20 +1,19 @@
 {
   "name": "ui5-double-click-poc",
-  "version": "1.0.0",
-  "description": "UI5 POC for double-click editable input",
+  "version": "2.0.0",
+  "description": "SAPUI5 POC for double-click editable input - hybrid runner",
   "scripts": {
-    "start": "ui5 serve -o index.html"
+    "start": "npx ui5 serve --port 8200 --open index.html",
+    "start:cdn": "npx http-server -p 8200 -o index.html?env=cdn",
+    "start:local": "npx ui5 serve --port 8200 --open index.html?env=local",
+    "start:backend": "npx http-server -p 8200 -o index.html?env=backend",
+    "start:hybrid": "npx ui5 serve --port 8200 --config ui5-backend.yaml --open index.html?env=hybrid"
   },
   "devDependencies": {
-    "@ui5/cli": "^2.14.0"
+    "@ui5/cli": "^3.0.0",
+    "ui5-middleware-simpleproxy": "^0.9.0"
   },
-  "main": "index.js",
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@openui5/sap.m": "^1.105.0",
-    "@openui5/sap.ui.core": "^1.105.0",
-    "@openui5/themelib_sap_horizon": "^1.105.0"
-  }
+  "license": "ISC"
 }
