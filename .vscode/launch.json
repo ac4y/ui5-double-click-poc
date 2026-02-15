@@ -1,0 +1,42 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CDN mód (SAPUI5 CDN)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8200/index.html?env=cdn",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "serve:cdn",
+            "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+        },
+        {
+            "name": "Local mód (ui5 serve)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8200/index.html?env=local",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "serve:local",
+            "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+        },
+        {
+            "name": "Backend mód (direkt)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8200/index.html?env=backend",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "serve:backend",
+            "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+        },
+        {
+            "name": "Hybrid mód (proxy → backend)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8200/index.html?env=hybrid",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "serve:hybrid",
+            "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+        }
+    ],
+    "compounds": []
+}
